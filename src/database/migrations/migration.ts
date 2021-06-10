@@ -1,3 +1,3 @@
-import { sequelize } from '../models/index';
+import { sequelize } from '@models/.';
 
 sequelize.sync({ alter: true }).then((res: any) => res).catch((err: any) => console.log(err));

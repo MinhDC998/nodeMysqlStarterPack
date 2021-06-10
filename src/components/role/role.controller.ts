@@ -1,9 +1,9 @@
-import Role from '../../database/models/role';
-import { ERole, IRole } from './role.types';
-import { failedResponse, successResponse, customRequest, customResponse } from '../../utils/http';
+import Role from '@models/role';
+import { ERole, IRole } from '@components/role/role.types';
+import { failedResponse, successResponse, customRequest, customResponse } from '@utils/http';
 
 const fakeRole = {
-    name: ERole.ADMIN
+    name: 21312
 };
 
 export const createTestRole = async (req: customRequest, res: customResponse<any>) => {

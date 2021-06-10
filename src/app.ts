@@ -1,6 +1,6 @@
 import express from 'express';
 import { Sequelize } from 'sequelize';
-import { createTestRole } from './components/role/role.controller';
+import { createTestRole } from '@components/role/role.controller';
 
 const app = express();
 const env = process.env;
