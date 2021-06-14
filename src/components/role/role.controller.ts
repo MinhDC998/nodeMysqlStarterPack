@@ -14,8 +14,11 @@ export const createTestRole = async (req: customRequest, res: customResponse<any
     try {
         const result = await Role.create(fakeRole, { transaction });
 
+        transaction.commit();
+
         res.json(successResponse(result));
     } catch (err) {
+        transaction.rollback();
         res.json(failedResponse(err, 'Error'));
     }
 }
