@@ -10,10 +10,8 @@ const sequelize = new Sequelize(env.DB_NAME ?? '', env.DB_USERNAME ?? '',  env.D
     dialect: 'mysql'
 });
 
-app.get('/', createTestRole)
-
 sequelize.authenticate().then(res => {
-    console.log(res)
+    app.get('/', createTestRole);
 }).catch(err => console.log(err));
 
 export default app;

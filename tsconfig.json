@@ -20,7 +20,8 @@
           "@components/*": ["src/components/*"],
           "@models/*": ["src/database/models/*"],
           "@utils/*": ["src/utils/*"],
-          "@root/*": ["src/*"]
+          "@root/*": ["src/*"],
+          "@middleware/*": ["src/middleware/*"],
       },
       "plugins": [
           {"transform": "typescript-transform-paths"}

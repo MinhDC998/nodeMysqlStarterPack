@@ -14,7 +14,7 @@ const Role = sequelize.define('Role', {
     type: DataTypes.STRING,
     allowNull: false,
   }
-})
+}, { timestamp: true })
 
 Role.hasMany(User, { foreignKey: 'roleId', as: 'userRoles' });
 
