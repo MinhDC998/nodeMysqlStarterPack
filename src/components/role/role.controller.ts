@@ -19,6 +19,8 @@ export const createTestRole = async (req: customRequest, res: customResponse<any
         res.json(successResponse(result));
     } catch (err) {
         transaction.rollback();
+        // next(err);
+
         res.json(failedResponse(err, 'Error'));
     }
 }
