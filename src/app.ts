@@ -1,6 +1,6 @@
 import express from 'express';
 import { Sequelize } from 'sequelize';
-import { createTestRole } from '@components/role/role.controller';
+import routes from '@router/.'
 import handeError from '@middleware/handleError';
 
 const app = express();
@@ -12,8 +12,9 @@ const sequelize = new Sequelize(env.DB_NAME ?? '', env.DB_USERNAME ?? '',  env.D
 });
 
 sequelize.authenticate().then(res => {
-    app.get('/', createTestRole);
-    app.use(handeError);
+    app.use(express.json());
+    app.use(routes);
 }).catch(err => console.log(err));
+    // app.use(handeError);
 
 export default app;

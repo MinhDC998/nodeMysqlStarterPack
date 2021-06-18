@@ -22,6 +22,8 @@
           "@utils/*": ["src/utils/*"],
           "@root/*": ["src/*"],
           "@middleware/*": ["src/middleware/*"],
+          "@router/*": ["src/routers/*"],
+          "@types/*": ["src/types/*"],
       },
       "plugins": [
           {"transform": "typescript-transform-paths"}

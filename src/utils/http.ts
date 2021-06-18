@@ -16,4 +16,4 @@ export const successResponse = <D>(data: D): ISuccessResponse<D> => ( { data, st
 export const failedResponse = <E>(error: E, status: string): IFailedResponse<E> => ( { error, status } );
 
 export interface customRequest<P = any, B = any, Q = any> extends Request<P, any, B, Q> {};
-export interface customResponse<D> extends Response<IResponse<D>> {}
+export interface customResponse<D> extends Response<IResponse<D | string>> {}

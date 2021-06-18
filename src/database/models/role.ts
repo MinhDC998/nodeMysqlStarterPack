@@ -1,6 +1,13 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Model, BuildOptions, Optional } from 'sequelize';
 import { sequelize } from '.';
 import User from '@models/user';
+import { IRole } from '@components/role/role.types';
+
+interface RoleInstance extends Model<Optional<IRole, 'id'>>, IRole {}
+
+type RoleModelStatic = typeof Model & {
+  new (values?: object, options?: BuildOptions): RoleInstance;
+};
 
 const Role = sequelize.define('Role', {
   id: {
@@ -14,7 +21,7 @@ const Role = sequelize.define('Role', {
     type: DataTypes.STRING,
     allowNull: true,
   }
-}, { timestamp: true })
+}, { timestamp: true }) as RoleModelStatic;
 
 Role.hasMany(User, { foreignKey: 'roleId', as: 'userRoles' });
 
