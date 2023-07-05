@@ -1,22 +1,26 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '.';
+import { DataTypes, CreationOptional } from "sequelize";
+import { sequelize } from ".";
 
-const User = sequelize.define('User', {
-    id: {
-        autoIncrement: true,
-        primaryKey: true,
-        allowNull: false,
-        type: DataTypes.INTEGER,
-    },
-    email: {
-        type: DataTypes.STRING,
-        unique: true,
-    },
-    password: DataTypes.STRING,
-    fullName: DataTypes.STRING,
-    avatarUrl: DataTypes.STRING,
-    phoneNumber: DataTypes.STRING,
-    // address: DataTypes.STRING,
+import { IUser } from "@ts/user.types";
+
+export default sequelize.define<IUser>("User", {
+  id: {
+    autoIncrement: true,
+    primaryKey: true,
+    allowNull: false,
+    type: DataTypes.INTEGER.UNSIGNED,
+  },
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  displayName: DataTypes.STRING,
 });
-
-export default User;
