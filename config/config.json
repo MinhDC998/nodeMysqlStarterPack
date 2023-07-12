@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": null,
-    "database": "test",
+    "database": "medical_helper",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },

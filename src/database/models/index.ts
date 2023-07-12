@@ -1,16 +1,20 @@
 import fs from "fs";
 import path from "path";
 import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
+
+dotenv.config({ path: path.join(__dirname, "../../../", ".env") });
 
 const db: any = {};
 const basename = path.basename(__filename);
 
-const { DB_USERNAME, DB_PASSWORD, DB_NAME } = process.env;
+const { DB_USERNAME, DB_PASSWORD, DB_NAME, DB_HOST } = process.env;
 
 const sequelize = new Sequelize(
   DB_NAME || "",
   DB_USERNAME || "",
-  DB_PASSWORD || ""
+  DB_PASSWORD || "",
+  { dialect: "mysql", host: DB_HOST ?? "localhost" }
 );
 
 fs.readdirSync(__dirname)

@@ -1,9 +1,11 @@
-import { DataTypes, CreationOptional } from "sequelize";
+import { DataTypes } from "sequelize";
 import { sequelize } from ".";
+
+import Tenant from "@models/tenant";
 
 import { IUser } from "@ts/user.types";
 
-export default sequelize.define<IUser>("User", {
+const User = sequelize.define<IUser>("User", {
   id: {
     autoIncrement: true,
     primaryKey: true,
@@ -24,3 +26,7 @@ export default sequelize.define<IUser>("User", {
   },
   displayName: DataTypes.STRING,
 });
+
+User.hasMany(Tenant, { as: "tenant" });
+
+export default User;

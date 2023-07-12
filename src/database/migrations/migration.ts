@@ -1,3 +1,8 @@
-import { sequelize } from '@models/.';
+console.log(1);
 
-sequelize.sync({ alter: true }).then((res: any) => res).catch((err: any) => console.log(err));
+import { sequelize } from "@models/.";
+
+sequelize
+  .sync({ alter: true })
+  .then((res: any) => res)
+  .catch((err: any) => console.log(err));
