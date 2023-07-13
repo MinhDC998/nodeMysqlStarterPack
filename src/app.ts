@@ -1,9 +1,9 @@
-import express from "express";
+import express, { Express } from "express";
 import { Sequelize } from "sequelize";
 import routes from "@router/.";
 import handleErrors from "@middleware/handleError";
 
-const app = express();
+const app: Express = express();
 const env = process.env;
 
 const sequelize = new Sequelize(
@@ -18,8 +18,9 @@ const sequelize = new Sequelize(
 
 sequelize
   .authenticate()
-  .then((res) => {
-    // app.use(express.json());
+  .then(() => {
+    // @ts-ignore
+    app.use(express.json());
     app.use(routes);
   })
   .catch((err) => console.log(err));

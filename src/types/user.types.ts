@@ -8,3 +8,7 @@ export interface IUser extends ModelDeclare<IUser> {
   displayName: string;
   role: ValueOf<typeof ROLE>;
 }
+
+export type TLogin = Pick<IUser, "username" | "password">;
+export type TResLogin = Omit<IUser, "id" | "password"> & { token: string };
+export type TCreate = Omit<IUser, "id">;

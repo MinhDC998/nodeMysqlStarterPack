@@ -5,4 +5,4 @@ const router = express.Router();
 
 router.get("/", readFile);
 
-export default router.use("excel", router);
+export default router;

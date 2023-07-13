@@ -16,7 +16,7 @@ const Tenant = sequelize.define<ITenant>("Tenant", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-});
+}, {underscored: true});
 
 // Tenant.belongsTo(User, { foreignKey: "userId", as: "user" });
 

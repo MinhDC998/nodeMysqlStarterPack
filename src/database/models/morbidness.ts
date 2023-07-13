@@ -17,7 +17,7 @@ const Morbidness = sequelize.define<IMorbidness>("Morbidness", {
     allowNull: false,
   },
   morbidnessCode: DataTypes.STRING,
-});
+}, {underscored: true});
 
 Morbidness.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });
 

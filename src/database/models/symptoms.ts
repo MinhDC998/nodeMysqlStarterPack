@@ -17,7 +17,7 @@ const Symptom = sequelize.define<ISymptom>("Symptom", {
     allowNull: false,
   },
   symptomCode: DataTypes.STRING,
-});
+}, {underscored: true});
 
 Symptom.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });
 

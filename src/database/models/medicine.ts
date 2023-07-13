@@ -25,7 +25,7 @@ const Medicine = sequelize.define<IMedicine>("Medicine", {
   morbidness: DataTypes.STRING,
   dosage: DataTypes.STRING,
   note: DataTypes.STRING,
-});
+}, { underscored: true });
 
 Medicine.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });
 
