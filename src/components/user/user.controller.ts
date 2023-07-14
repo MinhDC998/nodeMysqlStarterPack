@@ -77,7 +77,7 @@ export const login = async (
     }
 
     const token = jwt.sign({ id: user.id }, SECRET_KEY || "", {
-      expiresIn: EXPIRED_IN,
+      expiresIn: "24h",
     });
 
     const { displayName, role } = user.toJSON();

@@ -32,6 +32,4 @@ const User = sequelize.define<IUser>(
   { underscored: true }
 );
 
-User.hasMany(Tenant, { as: "tenant" });
-
 export default User;
