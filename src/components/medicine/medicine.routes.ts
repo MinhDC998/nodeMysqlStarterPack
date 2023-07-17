@@ -1,7 +1,9 @@
 import express from "express";
-import * as controller from "@components/tenant/tenant.controller";
+import * as controller from "@components/medicine/medicine.controller";
 
 const router = express.Router();
+
+router.get("/import-excel", controller.importExcel);
 
 router.get("/", controller.list);
 router.post("/", controller.create);

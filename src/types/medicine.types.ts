@@ -1,6 +1,6 @@
 import { ModelDeclare } from "@ts/common.types";
 
-export interface IMedicine extends ModelDeclare<IMedicine> {
+export interface IMedicine {
   id?: number;
   name: string;
   specificDisease: string;
@@ -12,4 +12,11 @@ export interface IMedicine extends ModelDeclare<IMedicine> {
   morbidness: string;
   dosage: string;
   note: string;
+  tenantId?: number;
 }
+
+export interface IModelMedicine
+  extends ModelDeclare<IModelMedicine>,
+    IMedicine {}
+
+export type ISearchMedicine = Pick<IMedicine, "morbidness" | "name">;

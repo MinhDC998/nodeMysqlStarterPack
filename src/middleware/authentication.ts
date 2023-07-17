@@ -17,11 +17,10 @@ export function authenticateToken(
 
     if (err) return res.json(failedResponse(err.message, "CredentialError"));
 
-    console.log({ user });
-
     // @ts-ignore
     req.user = user;
     req.body.user_id = user.id;
+    req.body.tenant_id = req.headers["tid"] ? +req.headers["tid"] : null;
 
     return next();
   });

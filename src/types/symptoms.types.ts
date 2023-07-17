@@ -4,4 +4,5 @@ export interface ISymptom extends ModelDeclare<ISymptom> {
   id?: number;
   name: string;
   symptomCode: string;
+  tenantId?: number;
 }

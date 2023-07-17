@@ -1,5 +1,5 @@
 import express from "express";
-import * as controller from "@components/tenant/tenant.controller";
+import * as controller from "@components/morbidness/morbidness.controller";
 
 const router = express.Router();
 
