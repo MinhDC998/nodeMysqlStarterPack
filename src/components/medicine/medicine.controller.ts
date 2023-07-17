@@ -1,5 +1,6 @@
 import xlsx from "xlsx";
 import path from "path";
+import fs from "fs";
 import { Op } from "sequelize";
 
 import {
@@ -16,8 +17,8 @@ import { sequelize } from "@models/.";
 import { IMedicine, ISearchMedicine } from "@ts/medicine.types";
 import Medicine from "@models/medicine";
 
-const getKeysFromExcelFile = (tenantId: number) => {
-  const workbook = xlsx.readFile(path.resolve(__dirname, "./import_temp.xlsx"));
+const getKeysFromExcelFile = (tenantId: number, file: Express.Multer.File) => {
+  const workbook = xlsx.readFile(path.resolve(process.cwd(), file.path));
   const sheet_name_list = workbook.SheetNames;
 
   const xlData: Array<Array<string>> = xlsx.utils.sheet_to_json(
@@ -47,6 +48,8 @@ const getKeysFromExcelFile = (tenantId: number) => {
     });
   });
 
+  if (fs.existsSync(file.path)) fs.rmSync(file.path, { recursive: true });
+
   return data;
 };
 
@@ -58,19 +61,29 @@ export const importExcel = async (
     .transaction()
     .then((transaction) => {
       try {
-        if (!req.headers["tid"]) return;
+        if (!req.headers["tid"]) {
+          res.json(failedResponse("Không tìm thấy nhà thuốc", "Error"));
+          return;
+        }
 
-        var xlData = getKeysFromExcelFile(+req.headers["tid"]);
+        if (!req.file) {
+          res.json(failedResponse("Không có file", "Error"));
+          return;
+        }
+
+        const xlData = getKeysFromExcelFile(+req.headers["tid"], req.file);
 
         Medicine.bulkCreate(xlData)
-          .then((res) => {
-            console.log({ res });
-
+          .then((r) => {
             transaction.commit();
-          })
-          .catch((err) => console.log({ err }));
 
-        res.json(successResponse(xlData));
+            res.json(successResponse(r));
+          })
+          .catch((err) => {
+            console.log({ err });
+
+            res.json(failedResponse("Error", "Error"));
+          });
       } catch (err) {
         console.log({ err });
         transaction.rollback();

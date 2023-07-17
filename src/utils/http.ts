@@ -5,7 +5,7 @@ interface ISuccessResponse<D> {
   status: string;
 }
 
-interface IFailedResponse<E> {
+export interface IFailedResponse<E> {
   error: E;
   status: string;
 }

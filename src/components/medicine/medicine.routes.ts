@@ -1,9 +1,10 @@
 import express from "express";
 import * as controller from "@components/medicine/medicine.controller";
+import { singleFileUpload } from "@utils/multer";
 
 const router = express.Router();
 
-router.get("/import-excel", controller.importExcel);
+router.post("/import-excel", singleFileUpload("excel"), controller.importExcel);
 
 router.get("/", controller.list);
 router.post("/", controller.create);

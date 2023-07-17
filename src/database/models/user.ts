@@ -1,8 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from ".";
 
-import Tenant from "@models/tenant";
-
 import { IUser } from "@ts/user.types";
 
 const User = sequelize.define<IUser>(
