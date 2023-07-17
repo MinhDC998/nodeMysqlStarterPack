@@ -60,11 +60,7 @@ export const importExcel = async (
       try {
         if (!req.headers["tid"]) return;
 
-        const data = req.params;
-
         var xlData = getKeysFromExcelFile(+req.headers["tid"]);
-        // console.log(xlData);
-        // const result = await Role.create(data, { transaction });
 
         Medicine.bulkCreate(xlData)
           .then((res) => {
@@ -115,12 +111,15 @@ export const list = async (
   try {
     const { offset, limit, morbidness, name } = req.query;
 
+    console.log(req.headers["tid"]);
+
     const condition = {
       offset: +offset,
       limit: +limit,
       where: {
         ...(morbidness && { morbidness: { [Op.in]: morbidness.split(", ") } }),
         ...(name && { name: { [Op.like]: `%${name}%` } }),
+        tenantId: req.headers["tid"],
       },
     };
 
