@@ -5,20 +5,24 @@ import Tenant from "@models/tenant";
 
 import { ISymptom } from "@ts/symptoms.types";
 
-const Symptom = sequelize.define<ISymptom>("Symptom", {
-  id: {
-    autoIncrement: true,
-    primaryKey: true,
-    allowNull: false,
-    type: DataTypes.INTEGER.UNSIGNED,
+const Symptom = sequelize.define<ISymptom>(
+  "Symptom",
+  {
+    id: {
+      autoIncrement: true,
+      primaryKey: true,
+      allowNull: false,
+      type: DataTypes.INTEGER.UNSIGNED,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    symptomCode: DataTypes.STRING,
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  symptomCode: DataTypes.STRING,
-}, {underscored: true});
+  { underscored: true }
+);
 
-Symptom.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });
+Symptom.belongsTo(Tenant, { foreignKey: "tenant_id", as: "tenant" });
 
 export default Symptom;

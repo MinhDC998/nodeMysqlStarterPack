@@ -20,6 +20,9 @@ export const create = async (
 
   try {
     const data = req.body;
+
+    console.log({ data });
+
     const result = await Morbidness.create(data, { transaction });
 
     transaction.commit();
