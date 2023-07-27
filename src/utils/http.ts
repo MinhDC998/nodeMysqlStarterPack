@@ -2,24 +2,24 @@ import { Request, Response } from "express";
 
 interface ISuccessResponse<D> {
   data: D;
-  status: string;
+  statusCode: string;
 }
 
 export interface IFailedResponse<E> {
-  error: E;
-  status: string;
+  message: E;
+  statusCode: string;
 }
 
 type IResponse<D> = ISuccessResponse<D> | IFailedResponse<D>;
 
 export const successResponse = <D>(data: D): ISuccessResponse<D> => ({
   data,
-  status: "OK",
+  statusCode: "OK",
 });
 export const failedResponse = <E>(
-  error: E,
-  status: string
-): IFailedResponse<E> => ({ error, status });
+  message: E,
+  statusCode: string
+): IFailedResponse<E> => ({ message, statusCode });
 
 export type customResponse<D> = Response<IResponse<D | string>>;
 

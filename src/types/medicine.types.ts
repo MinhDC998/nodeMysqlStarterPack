@@ -13,6 +13,10 @@ export interface IMedicine {
   dosage: string;
   note: string;
   tenantId?: number;
+  unit: number;
+  price: number;
+  medicineGroup: string;
+  image?: string | null;
 }
 
 export interface IModelMedicine

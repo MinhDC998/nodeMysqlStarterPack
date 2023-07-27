@@ -26,9 +26,16 @@ const Medicine = sequelize.define<IModelMedicine>(
     specificObject: DataTypes.STRING,
     morbidness: DataTypes.STRING,
     dosage: DataTypes.STRING,
+    unit: DataTypes.INTEGER,
+    price: DataTypes.INTEGER,
+    medicineGroup: DataTypes.STRING,
     note: DataTypes.STRING,
+    image: DataTypes.STRING,
   },
-  { underscored: true }
+  {
+    underscored: true,
+    indexes: [{ type: "FULLTEXT", name: "text_idx", fields: ["morbidness"] }],
+  }
 );
 
 Medicine.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });

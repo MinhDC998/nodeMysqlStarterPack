@@ -45,6 +45,9 @@ const getKeysFromExcelFile = (tenantId: number, file: Express.Multer.File) => {
       dosage: v[8],
       note: v[9],
       tenantId,
+      price: 0,
+      unit: 0,
+      medicineGroup: "",
     });
   });
 
@@ -101,20 +104,29 @@ export const create = async (
   req: requestBody<IMedicine>,
   res: customResponse<IMedicine>
 ) => {
-  const transaction = await sequelize.transaction();
+  sequelize
+    .transaction()
+    .then(async (transaction) => {
+      if (!req.headers["tid"]) {
+        res.json(failedResponse("Không tìm thấy nhà thuốc", "Error"));
+        return;
+      }
 
-  try {
-    const data = req.body;
-    const result = await Medicine.create(data, { transaction });
+      const data = req.body;
 
-    transaction.commit();
+      data.name = "";
+      data.image = req.file?.filename || null;
+      data.tenantId = +req.headers["tid"];
 
-    res.json(successResponse(result));
-  } catch (err) {
-    transaction.rollback();
+      const result = await Medicine.create(data, { transaction });
 
-    res.json(failedResponse("Error", "Error"));
-  }
+      transaction.commit();
+
+      res.json(successResponse(result));
+    })
+    .catch(() => {
+      res.json(failedResponse("Error", "Error"));
+    });
 };
 
 export const list = async (
@@ -124,15 +136,30 @@ export const list = async (
   try {
     const { offset, limit, morbidness, name } = req.query;
 
-    console.log(req.headers["tid"]);
+    const morbidnessOr = [];
+
+    if (morbidness) {
+      morbidness.split(",").forEach((v) => {
+        morbidnessOr.push({
+          [Op.or]: {
+            morbidness: { [Op.like]: `%${v}%` },
+          },
+        });
+      });
+    }
 
     const condition = {
       offset: +offset,
       limit: +limit,
-      where: {
-        ...(morbidness && { morbidness: { [Op.in]: morbidness.split(", ") } }),
-        ...(name && { name: { [Op.like]: `%${name}%` } }),
-        tenantId: req.headers["tid"],
+      where: [
+        sequelize.literal("MATCH (morbidness) AGAINST (:morbidness)"),
+        {
+          ...(name && { name: { [Op.like]: `%${name}%` } }),
+          tenant_id: req.headers["tid"],
+        },
+      ],
+      replacements: {
+        morbidness: morbidness.replace(",", " "),
       },
     };
 
@@ -140,6 +167,7 @@ export const list = async (
 
     res.json(successResponse(result));
   } catch (err) {
+    console.log({ err });
     res.json(failedResponse("Error", "Error"));
   }
 };

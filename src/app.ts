@@ -1,5 +1,8 @@
 import express, { Express } from "express";
 import { Sequelize } from "sequelize";
+import cors from "cors";
+import path from "path";
+
 import routes from "@router/.";
 import handleErrors from "@middleware/handleError";
 
@@ -19,9 +22,18 @@ const sequelize = new Sequelize(
 sequelize
   .authenticate()
   .then(() => {
+    app.use(
+      cors({
+        origin: "*",
+      })
+    );
+
+    console.log(path.join(__dirname, "./public"));
+
     // @ts-ignore
     app.use(express.json());
     app.use(routes);
+    app.use("/public", express.static(path.join(__dirname, "../public")));
   })
   .catch((err) => console.log(err));
 

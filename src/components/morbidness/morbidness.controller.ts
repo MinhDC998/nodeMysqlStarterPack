@@ -21,8 +21,6 @@ export const create = async (
   try {
     const data = req.body;
 
-    console.log({ data });
-
     const result = await Morbidness.create(data, { transaction });
 
     transaction.commit();
@@ -42,6 +40,7 @@ export const list = async (
   try {
     const { offset, limit } = req.query;
     const result = await Morbidness.findAndCountAll({
+      where: { tenantId: req.headers["tid"] },
       offset: +offset,
       limit: +limit,
     });

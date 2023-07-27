@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import { sequelize } from ".";
 
 import { IUser } from "@ts/user.types";
+import ROLE from "@constants/role.constant";
 
 const User = sequelize.define<IUser>(
   "User",
@@ -22,7 +23,8 @@ const User = sequelize.define<IUser>(
       allowNull: false,
     },
     role: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM,
+      values: Object.values(ROLE).map((v) => v.toString()),
       allowNull: false,
     },
     displayName: DataTypes.STRING,

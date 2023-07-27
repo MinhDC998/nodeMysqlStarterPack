@@ -19,6 +19,7 @@ const Symptom = sequelize.define<ISymptom>(
       allowNull: false,
     },
     symptomCode: DataTypes.STRING,
+    symptomGroup: DataTypes.STRING,
   },
   { underscored: true }
 );
