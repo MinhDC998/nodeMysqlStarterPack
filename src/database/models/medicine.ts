@@ -34,7 +34,13 @@ const Medicine = sequelize.define<IModelMedicine>(
   },
   {
     underscored: true,
-    indexes: [{ type: "FULLTEXT", name: "text_idx", fields: ["morbidness"] }],
+    indexes: [
+      {
+        type: "FULLTEXT",
+        name: "text_idx",
+        fields: ["morbidness"],
+      },
+    ],
   }
 );
 

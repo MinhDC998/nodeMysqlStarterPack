@@ -1,7 +1,7 @@
 import xlsx from "xlsx";
 import path from "path";
 import fs from "fs";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 
 import {
   failedResponse,
@@ -134,7 +134,7 @@ export const list = async (
   res: customResponse<any>
 ) => {
   try {
-    const { offset, limit, morbidness, name } = req.query;
+    const { offset, limit, morbidness, key } = req.query;
 
     const morbidnessOr = [];
 
@@ -148,15 +148,22 @@ export const list = async (
       });
     }
 
+    const fullTextSearch = `MATCH (morbidness) AGAINST (:morbidness)`;
+
     const condition = {
       offset: +offset,
       limit: +limit,
       where: [
-        sequelize.literal("MATCH (morbidness) AGAINST (:morbidness)"),
         {
-          ...(name && { name: { [Op.like]: `%${name}%` } }),
+          ...(key && {
+            [Op.or]: [
+              { name: { [Op.like]: `%${key}%` } },
+              { ingredients: { [Op.like]: `%${key}%` } },
+            ],
+          }),
           tenant_id: req.headers["tid"],
         },
+        morbidness ? sequelize.literal(fullTextSearch) : {},
       ],
       replacements: {
         morbidness: morbidness.replace(",", " "),
