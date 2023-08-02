@@ -34,20 +34,20 @@ const getKeysFromExcelFile = (tenantId: number, file: Express.Multer.File) => {
     if (i === 0) return;
 
     data.push({
-      name: v[4],
-      specificDisease: v[2],
+      name: v[2],
+      specificDisease: v[6],
       symptoms: v[3],
-      medicineCode: v[5],
-      medicineName: v[4],
-      ingredients: v[6],
+      medicineCode: v[3],
+      medicineName: v[2],
+      ingredients: v[4],
       specificObject: v[7],
-      morbidness: v[3],
-      dosage: v[8],
-      note: v[9],
+      morbidness: v[5],
+      dosage: v[9],
+      note: v[10],
       tenantId,
       price: 0,
       unit: 0,
-      medicineGroup: "",
+      medicineGroup: v[1],
     });
   });
 
@@ -75,6 +75,7 @@ export const importExcel = async (
         }
 
         const xlData = getKeysFromExcelFile(+req.headers["tid"], req.file);
+        res.json(successResponse(xlData));
 
         Medicine.bulkCreate(xlData)
           .then((r) => {
@@ -148,8 +149,6 @@ export const list = async (
       });
     }
 
-    const fullTextSearch = `MATCH (morbidness) AGAINST (:morbidness)`;
-
     const condition = {
       offset: +offset,
       limit: +limit,
@@ -161,15 +160,19 @@ export const list = async (
               { ingredients: { [Op.like]: `%${key}%` } },
             ],
           }),
-          tenant_id: req.headers["tid"],
+          ...(req.headers["tid"] && { tenant_id: req.headers["tid"] }),
         },
-        morbidness ? sequelize.literal(fullTextSearch) : {},
+        morbidness
+          ? sequelize.literal("MATCH (morbidness) AGAINST (:morbidness)")
+          : {},
       ],
       replacements: {
         morbidness: morbidness.replace(",", " "),
       },
+      order: [["id", "desc"]],
     };
 
+    // @ts-ignore
     const result = await Medicine.findAndCountAll(condition);
 
     res.json(successResponse(result));
