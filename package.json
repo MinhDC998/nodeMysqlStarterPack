@@ -7,8 +7,10 @@
   "module": "commonjs",
   "scripts": {
     "start": "env-cmd -f .env.development nodemon ./src/index.ts",
-    "migrate": "nodemon ./src/database/migrations/migration.ts",
-    "build": "rimraf ./build && tsc"
+    "migrate": "env-cmd -f .env.development nodemon ./src/database/migrations/migration.ts",
+    "build": "rimraf ./build && tsc",
+    "start:prod": "env-cmd -f .env node -r ts-node/register/transpile-only -r tsconfig-paths/register ./index.js",
+    "migrate:prod": "env-cmd -f .env node -r ts-node/register/transpile-only -r tsconfig-paths/register ./database/migrations/migration.js"
   },
   "keywords": [],
   "author": "",

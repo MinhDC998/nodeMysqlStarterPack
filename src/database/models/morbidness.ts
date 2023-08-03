@@ -3,9 +3,9 @@ import { sequelize } from ".";
 
 import Tenant from "@models/tenant";
 
-import { IMorbidness } from "@ts/morbidness.types";
+import { IModelMorbidness } from "@ts/morbidness.types";
 
-const Morbidness = sequelize.define<IMorbidness>(
+const Morbidness = sequelize.define<IModelMorbidness>(
   "Morbidness",
   {
     id: {

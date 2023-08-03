@@ -1,7 +1,7 @@
 import xlsx from "xlsx";
 import path from "path";
 import fs from "fs";
-import { Op, Sequelize } from "sequelize";
+import { Op } from "sequelize";
 
 import {
   failedResponse,
@@ -14,10 +14,17 @@ import {
   TSearch,
 } from "@utils/http";
 import { sequelize } from "@models/.";
-import { IMedicine, ISearchMedicine } from "@ts/medicine.types";
-import Medicine from "@models/medicine";
 
-const getKeysFromExcelFile = (tenantId: number, file: Express.Multer.File) => {
+import { IMedicine, ISearchMedicine } from "@ts/medicine.types";
+import { IMorbidness } from "@ts/morbidness.types";
+
+import Medicine from "@models/medicine";
+import Morbidness from "@models/morbidness";
+
+const getKeysFromExcelFile = (
+  tenantId: number,
+  file: Express.Multer.File
+): { data: IMedicine[]; morbidnessData: IMorbidness[] } => {
   const workbook = xlsx.readFile(path.resolve(process.cwd(), file.path));
   const sheet_name_list = workbook.SheetNames;
 
@@ -29,6 +36,7 @@ const getKeysFromExcelFile = (tenantId: number, file: Express.Multer.File) => {
   );
 
   const data: IMedicine[] = [];
+  const morbidnessData: IMorbidness[] = [];
 
   xlData.forEach((v, i) => {
     if (i === 0) return;
@@ -49,11 +57,17 @@ const getKeysFromExcelFile = (tenantId: number, file: Express.Multer.File) => {
       unit: 0,
       medicineGroup: v[1],
     });
+
+    if (v[5]) {
+      v[5].split(",").forEach((name: string) => {
+        morbidnessData.push({ name, tenantId, morbidnessCode: name });
+      });
+    }
   });
 
   if (fs.existsSync(file.path)) fs.rmSync(file.path, { recursive: true });
 
-  return data;
+  return { data, morbidnessData };
 };
 
 export const importExcel = async (
@@ -74,14 +88,24 @@ export const importExcel = async (
           return;
         }
 
-        const xlData = getKeysFromExcelFile(+req.headers["tid"], req.file);
-        res.json(successResponse(xlData));
+        const { data, morbidnessData } = getKeysFromExcelFile(
+          +req.headers["tid"],
+          req.file
+        );
 
-        Medicine.bulkCreate(xlData)
-          .then((r) => {
+        Promise.all([
+          Medicine.bulkCreate(data),
+          Morbidness.bulkCreate(morbidnessData),
+        ])
+          .then(([medicines, morbidness]) => {
             transaction.commit();
 
-            res.json(successResponse(r));
+            res.json(
+              successResponse({
+                medicines,
+                morbidness,
+              })
+            );
           })
           .catch((err) => {
             console.log({ err });

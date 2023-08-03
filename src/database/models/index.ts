@@ -1,9 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
-
-dotenv.config({ path: path.join(__dirname, "../../../", ".env") });
 
 const db: any = {};
 const basename = path.basename(__filename);
