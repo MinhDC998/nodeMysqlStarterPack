@@ -20,11 +20,12 @@ import { IMorbidness } from "@ts/morbidness.types";
 
 import Medicine from "@models/medicine";
 import Morbidness from "@models/morbidness";
+import { uppercaseFirstLetter } from "@utils/collection";
 
 const getKeysFromExcelFile = (
   tenantId: number,
   file: Express.Multer.File
-): { data: IMedicine[]; morbidnessData: IMorbidness[] } => {
+): { data: IMedicine[]; morbidNessName: string[] } => {
   const workbook = xlsx.readFile(path.resolve(process.cwd(), file.path));
   const sheet_name_list = workbook.SheetNames;
 
@@ -37,6 +38,7 @@ const getKeysFromExcelFile = (
 
   const data: IMedicine[] = [];
   const morbidnessData: IMorbidness[] = [];
+  const morbidNessName: string[] = [];
 
   xlData.forEach((v, i) => {
     if (i === 0) return;
@@ -60,14 +62,39 @@ const getKeysFromExcelFile = (
 
     if (v[5]) {
       v[5].split(",").forEach((name: string) => {
-        morbidnessData.push({ name, tenantId, morbidnessCode: name });
+        const morName = uppercaseFirstLetter(name).trim().toLowerCase();
+
+        if (!morbidNessName.includes(morName)) morbidNessName.push(morName);
       });
     }
   });
 
   if (fs.existsSync(file.path)) fs.rmSync(file.path, { recursive: true });
 
-  return { data, morbidnessData };
+  return { data, morbidNessName };
+};
+
+const insertMorbidness = (morbidnessName: string[], tenantId: number): void => {
+  Morbidness.findAll({
+    where: { name: { [Op.in]: morbidnessName }, tenantId },
+  }).then((morbidness) => {
+    const insertNameData = [...morbidnessName];
+    morbidness.forEach((v) => {
+      if (morbidnessName.includes(v.name)) {
+        insertNameData.slice(
+          morbidnessName.findIndex((name) => name === v.name)
+        );
+      }
+    });
+
+    const data: IMorbidness[] = insertNameData.map((v) => ({
+      name: v,
+      tenantId,
+      morbidnessCode: v,
+    }));
+
+    Morbidness.bulkCreate(data);
+  });
 };
 
 export const importExcel = async (
@@ -88,14 +115,14 @@ export const importExcel = async (
           return;
         }
 
-        const { data, morbidnessData } = getKeysFromExcelFile(
+        const { data, morbidNessName } = getKeysFromExcelFile(
           +req.headers["tid"],
           req.file
         );
 
         Promise.all([
           Medicine.bulkCreate(data),
-          Morbidness.bulkCreate(morbidnessData),
+          insertMorbidness(morbidNessName, +req.headers["tid"]),
         ])
           .then(([medicines, morbidness]) => {
             transaction.commit();
@@ -233,7 +260,9 @@ export const update = async (
       const { id } = req.params;
       const inputUpdate = req.body;
 
-      await Medicine.update(inputUpdate, { where: { id }, transaction });
+      inputUpdate.image = req.file?.filename || null;
+
+      await Medicine.update(inputUpdate, { where: { id: +id }, transaction });
 
       res.json(successResponse(await Medicine.findByPk(id)));
     });

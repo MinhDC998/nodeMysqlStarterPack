@@ -16,7 +16,7 @@ router.get("/", controller.list);
 router.post("/", singleFileUpload("file", DIR.MEDICINE), controller.create);
 
 router.get("/:id", controller.detail);
-router.post("/:id", controller.update);
+router.post("/:id", singleFileUpload("file", DIR.MEDICINE), controller.update);
 router.delete("/:id", controller.remove);
 
 export default router;

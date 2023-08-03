@@ -44,6 +44,10 @@ const Medicine = sequelize.define<IModelMedicine>(
   }
 );
 
-Medicine.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });
+Medicine.belongsTo(Tenant, {
+  foreignKey: "tenantId",
+  as: "tenant",
+  onDelete: "CASCADE",
+});
 
 export default Medicine;

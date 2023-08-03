@@ -23,6 +23,10 @@ const Morbidness = sequelize.define<IModelMorbidness>(
   { underscored: true }
 );
 
-Morbidness.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });
+Morbidness.belongsTo(Tenant, {
+  foreignKey: "tenantId",
+  as: "tenant",
+  onDelete: "CASCADE",
+});
 
 export default Morbidness;
