@@ -7,6 +7,7 @@ export interface IUser extends ModelDeclare<IUser> {
   password: string;
   displayName: string;
   role: ValueOf<typeof ROLE>;
+  tenantId: number;
 }
 
 export type TLogin = Pick<IUser, "username" | "password">;

@@ -70,7 +70,6 @@ export const login = async (
     const user = await User.findOne({ where: { username } });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      console.log({ user });
       res.json(
         failedResponse("Sai tài khoản hoặc mật khẩu", "invalidCredentials")
       );
@@ -81,10 +80,16 @@ export const login = async (
       expiresIn: "24h",
     });
 
-    const { displayName, role } = user.toJSON();
+    const { displayName, role, tenantId } = user.toJSON();
 
     res.json(
-      successResponse({ username, displayName, role, token } as TResLogin)
+      successResponse({
+        username,
+        displayName,
+        role,
+        token,
+        tenantId,
+      } as TResLogin)
     );
   } catch (err) {
     console.log({ err });

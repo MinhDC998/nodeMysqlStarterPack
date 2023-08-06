@@ -15,16 +15,16 @@
     "noUnusedParameters": false,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "paths": {
-      "@components/*": ["src/components/*"],
-      "@models/*": ["src/database/models/*"],
-      "@utils/*": ["src/utils/*"],
-      "@root/*": ["src/*"],
-      "@middleware/*": ["src/middleware/*"],
-      "@router/*": ["src/routers/*"],
-      "@ts/*": ["src/types/*"],
-      "@constants/*": ["src/constants/*"]
+      "@components/*": ["components/*"],
+      "@models/*": ["database/models/*"],
+      "@utils/*": ["utils/*"],
+      "@root/*": ["*"],
+      "@middleware/*": ["middleware/*"],
+      "@router/*": ["routers/*"],
+      "@ts/*": ["types/*"],
+      "@constants/*": ["constants/*"]
     },
     "plugins": [{ "transform": "typescript-transform-paths" }]
   },

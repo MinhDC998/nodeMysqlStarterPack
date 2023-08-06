@@ -3,6 +3,7 @@ import { sequelize } from ".";
 
 import { IUser } from "@ts/user.types";
 import ROLE from "@constants/role.constant";
+import Tenant from "@models/tenant";
 
 const User = sequelize.define<IUser>(
   "User",
@@ -28,8 +29,14 @@ const User = sequelize.define<IUser>(
       allowNull: false,
     },
     displayName: DataTypes.STRING,
+    tenantId: {
+      type: DataTypes.SMALLINT,
+      allowNull: true,
+    },
   },
   { underscored: true }
 );
+
+// User.belongsTo(Tenant, { foreignKey: "tenantId", as: "tenant" });
 
 export default User;

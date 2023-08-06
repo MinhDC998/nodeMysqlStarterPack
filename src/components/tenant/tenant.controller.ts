@@ -1,4 +1,3 @@
-import Tenant from "@models/tenant";
 import {
   failedResponse,
   successResponse,
@@ -11,6 +10,9 @@ import {
 import { sequelize } from "@models/.";
 
 import { ITenant } from "@ts/tenant.types";
+
+import Tenant from "@models/tenant";
+import User from "@models/user";
 
 export const create = async (
   req: requestBody<{ name: string }>,
@@ -94,6 +96,35 @@ export const remove = async (
       const { id } = req.params;
 
       await Tenant.destroy({ where: { id }, transaction });
+
+      res.json(successResponse(true));
+    });
+  } catch (err) {
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const addUserToTenant = async (
+  req: requestBody<{ user: number; tenant: number }>,
+  res: customResponse<any>
+) => {
+  try {
+    sequelize.transaction(async (transaction: any) => {
+      const { user, tenant } = req.body;
+
+      console.log({ user, tenant });
+
+      const tenantRes = await Tenant.findOne({ where: { id: tenant } });
+
+      if (!tenantRes) {
+        res.json(failedResponse("Nhà thuốc không tồn tại", "Error"));
+        return;
+      }
+
+      await User.update(
+        { tenantId: tenant },
+        { where: { id: user }, transaction }
+      );
 
       res.json(successResponse(true));
     });

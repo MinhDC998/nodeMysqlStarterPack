@@ -12,7 +12,7 @@ const env = process.env;
 const sequelize = new Sequelize(
   env.DB_NAME ?? "",
   env.DB_USERNAME ?? "",
-  env.DB_PASS ?? "",
+  env.DB_PASSWORD ?? "",
   {
     host: env.DB_HOST ?? "localhost",
     dialect: "mysql",
@@ -32,7 +32,7 @@ sequelize
 
     // @ts-ignore
     app.use(express.json());
-    app.use(routes);
+    app.use("/api", routes);
     app.use("/public", express.static(path.join(__dirname, "../public")));
   })
   .catch((err) => console.log(err));

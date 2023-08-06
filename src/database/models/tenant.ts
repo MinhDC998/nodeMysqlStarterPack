@@ -22,6 +22,4 @@ const Tenant = sequelize.define<ITenant>(
   { underscored: true }
 );
 
-Tenant.belongsTo(User, { foreignKey: "userId", as: "user" });
-
 export default Tenant;
