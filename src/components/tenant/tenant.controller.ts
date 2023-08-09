@@ -112,8 +112,6 @@ export const addUserToTenant = async (
     sequelize.transaction(async (transaction: any) => {
       const { user, tenant } = req.body;
 
-      console.log({ user, tenant });
-
       const tenantRes = await Tenant.findOne({ where: { id: tenant } });
 
       if (!tenantRes) {

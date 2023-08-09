@@ -11,12 +11,13 @@ export interface IMedicine {
   specificObject: string;
   morbidness: string;
   dosage: string;
-  note: string;
+  note?: string;
   tenantId?: number;
-  unit: number;
-  price: number;
+  unit?: number;
+  price?: number;
   medicineGroup: string;
   image?: string | null;
+  diseaseStatus?: string;
 }
 
 export interface IModelMedicine

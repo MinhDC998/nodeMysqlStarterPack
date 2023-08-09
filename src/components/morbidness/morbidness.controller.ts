@@ -11,6 +11,7 @@ import { sequelize } from "@models/.";
 import Morbidness from "@models/morbidness";
 
 import { IMorbidness } from "@ts/morbidness.types";
+import { Op } from "sequelize";
 
 export const create = async (
   req: requestBody<IMorbidness>,
@@ -34,15 +35,18 @@ export const create = async (
 };
 
 export const list = async (
-  req: requestQuery<{ offset: number; limit: number }>,
+  req: requestQuery<{ offset: number; limit: number; name: string }>,
   res: customResponse<any>
 ) => {
   try {
-    const { offset, limit } = req.query;
-    const result = await Morbidness.findAndCountAll({
-      where: { tenantId: req.headers["tid"] },
-      offset: +offset,
-      limit: +limit,
+    const { offset, limit, name } = req.query;
+    const result = await Morbidness.findAll({
+      where: {
+        tenantId: req.headers["tid"],
+        ...(name && { name: { [Op.like]: `%${name}%` } }),
+      },
+      // offset: +offset,
+      // limit: +limit,
     });
 
     res.json(successResponse(result));

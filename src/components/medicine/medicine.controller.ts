@@ -58,6 +58,7 @@ const getKeysFromExcelFile = (
       price: 0,
       unit: 0,
       medicineGroup: v[1],
+      diseaseStatus: v[8],
     });
 
     if (v[5]) {

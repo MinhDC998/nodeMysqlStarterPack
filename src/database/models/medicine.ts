@@ -31,6 +31,7 @@ const Medicine = sequelize.define<IModelMedicine>(
     medicineGroup: DataTypes.TEXT,
     note: DataTypes.TEXT,
     image: DataTypes.STRING,
+    diseaseStatus: DataTypes.STRING,
   },
   {
     underscored: true,
