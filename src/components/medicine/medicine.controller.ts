@@ -15,7 +15,11 @@ import {
 } from "@utils/http";
 import { sequelize } from "@models/.";
 
-import { IMedicine, ISearchMedicine } from "@ts/medicine.types";
+import {
+  IMedicine,
+  ISearchMedicine,
+  IMedicineListResponse,
+} from "@ts/medicine.types";
 import { IMorbidness } from "@ts/morbidness.types";
 
 import Medicine from "@models/medicine";
@@ -187,7 +191,14 @@ export const list = async (
   res: customResponse<any>
 ) => {
   try {
-    const { offset, limit, morbidness, key } = req.query;
+    const {
+      offset,
+      limit,
+      morbidness,
+      key,
+      specificObject: specificObjectInput,
+      diseaseStatus: diseaseStatusInput,
+    } = req.query;
 
     const morbidnessOr = [];
 
@@ -201,23 +212,31 @@ export const list = async (
       });
     }
 
+    const where = [
+      {
+        ...(key && {
+          [Op.or]: [
+            { name: { [Op.like]: `%${key}%` } },
+            { ingredients: { [Op.like]: `%${key}%` } },
+          ],
+        }),
+        ...(req.headers["tid"] && { tenant_id: req.headers["tid"] }),
+        ...(specificObjectInput && {
+          specific_object: { [Op.like]: `%${specificObjectInput}%` },
+        }),
+        ...(diseaseStatusInput && {
+          disease_status: { [Op.like]: `%${diseaseStatusInput}%` },
+        }),
+      },
+      morbidness
+        ? sequelize.literal("MATCH (morbidness) AGAINST (:morbidness)")
+        : {},
+    ];
+
     const condition = {
       offset: +offset,
       limit: +limit,
-      where: [
-        {
-          ...(key && {
-            [Op.or]: [
-              { name: { [Op.like]: `%${key}%` } },
-              { ingredients: { [Op.like]: `%${key}%` } },
-            ],
-          }),
-          ...(req.headers["tid"] && { tenant_id: req.headers["tid"] }),
-        },
-        morbidness
-          ? sequelize.literal("MATCH (morbidness) AGAINST (:morbidness)")
-          : {},
-      ],
+      where,
       replacements: {
         morbidness: morbidness.replace(",", " "),
       },
@@ -227,7 +246,102 @@ export const list = async (
     // @ts-ignore
     const result = await Medicine.findAndCountAll(condition);
 
+    const specificObject: string[] = [];
+    const diseaseStatus: string[] = [];
+
+    // let total = 0;
+
+    // // @ts-ignore
+    // count.forEach(
+    //   (v: {
+    //     count: number;
+    //     specificObject: string | null;
+    //     diseaseStatus: string | null;
+    //   }) => {
+    //     total += v.count;
+
+    //     if (v.diseaseStatus && !diseaseStatus.includes(v.diseaseStatus))
+    //       diseaseStatus.push(v.diseaseStatus);
+    //     if (v.specificObject && !diseaseStatus.includes(v.specificObject))
+    //       specificObject.push(v.specificObject);
+    //   }
+    // );
+
+    // const responseList: IMedicineListResponse = {
+    //   rows,
+    //   count: total,
+    //   diseaseStatus,
+    //   specificObject,
+    // };
+
     res.json(successResponse(result));
+  } catch (err) {
+    console.log({ err });
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const listStatus = async (
+  req: requestQuery<TSearch<ISearchMedicine>>,
+  res: customResponse<any>
+) => {
+  try {
+    const { morbidness, key } = req.query;
+
+    const morbidnessOr = [];
+
+    if (morbidness) {
+      morbidness.split(",").forEach((v) => {
+        morbidnessOr.push({
+          [Op.or]: {
+            morbidness: { [Op.like]: `%${v}%` },
+          },
+        });
+      });
+    }
+
+    const where = [
+      {
+        ...(key && {
+          [Op.or]: [
+            { name: { [Op.like]: `%${key}%` } },
+            { ingredients: { [Op.like]: `%${key}%` } },
+          ],
+        }),
+        ...(req.headers["tid"] && { tenant_id: req.headers["tid"] }),
+      },
+      morbidness
+        ? sequelize.literal("MATCH (morbidness) AGAINST (:morbidness)")
+        : {},
+    ];
+
+    const condition = {
+      where,
+      replacements: {
+        morbidness: morbidness.replace(",", " "),
+      },
+      attributes: ["diseaseStatus", "specificObject"],
+      group: ["diseaseStatus", "specificObject"],
+    };
+
+    const result = await Medicine.findAll(condition);
+
+    const specificObject: string[] = [];
+    const diseaseStatus: string[] = [];
+
+    result.forEach((value) => {
+      if (value.diseaseStatus && !diseaseStatus.includes(value.diseaseStatus))
+        diseaseStatus.push(value.diseaseStatus);
+      if (value.specificObject && !diseaseStatus.includes(value.specificObject))
+        specificObject.push(value.specificObject);
+    });
+
+    const responseList = {
+      diseaseStatus,
+      specificObject,
+    };
+
+    res.json(successResponse(responseList));
   } catch (err) {
     console.log({ err });
     res.json(failedResponse("Error", "Error"));

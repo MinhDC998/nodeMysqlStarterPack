@@ -13,6 +13,7 @@ router.post(
 );
 
 router.get("/", controller.list);
+router.get("/list-status", controller.listStatus);
 router.post("/", singleFileUpload("file", DIR.MEDICINE), controller.create);
 
 router.get("/:id", controller.detail);

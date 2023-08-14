@@ -24,4 +24,14 @@ export interface IModelMedicine
   extends ModelDeclare<IModelMedicine>,
     IMedicine {}
 
-export type ISearchMedicine = Pick<IMedicine, "morbidness"> & { key: string };
+export type ISearchMedicine = Pick<
+  IMedicine,
+  "morbidness" | "diseaseStatus" | "specificObject"
+> & { key: string };
+
+export interface IMedicineListResponse {
+  rows: IMedicine[];
+  count: number;
+  diseaseStatus: string[];
+  specificObject: string[];
+}
