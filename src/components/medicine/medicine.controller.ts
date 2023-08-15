@@ -26,10 +26,17 @@ import Medicine from "@models/medicine";
 import Morbidness from "@models/morbidness";
 import { uppercaseFirstLetter } from "@utils/collection";
 
+interface IResExcelData {
+  data: IMedicine[];
+  morbidNessName: string[];
+  isEmptyMedicine: boolean;
+  isEmptyMorbidness: boolean;
+}
+
 const getKeysFromExcelFile = (
   tenantId: number,
   file: Express.Multer.File
-): { data: IMedicine[]; morbidNessName: string[] } => {
+): IResExcelData => {
   const workbook = xlsx.readFile(path.resolve(process.cwd(), file.path));
   const sheet_name_list = workbook.SheetNames;
 
@@ -44,8 +51,24 @@ const getKeysFromExcelFile = (
   const morbidnessData: IMorbidness[] = [];
   const morbidNessName: string[] = [];
 
-  xlData.forEach((v, i) => {
-    if (i === 0) return;
+  let isEmptyMedicine = false;
+  let isEmptyMorbidness = false;
+
+  for (let i = 0; i < xlData.length; i++) {
+    if (i === 0) continue;
+    const v = xlData[i];
+
+    if (!v[3] || !v[2]) {
+      isEmptyMedicine = true;
+
+      return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
+    }
+
+    if (!v[5]) {
+      isEmptyMorbidness = true;
+
+      return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
+    }
 
     data.push({
       name: v[2],
@@ -72,11 +95,11 @@ const getKeysFromExcelFile = (
         if (!morbidNessName.includes(morName)) morbidNessName.push(morName);
       });
     }
-  });
+  }
 
   if (fs.existsSync(file.path)) fs.rmSync(file.path, { recursive: true });
 
-  return { data, morbidNessName };
+  return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
 };
 
 const insertMorbidness = (morbidnessName: string[], tenantId: number): void => {
@@ -98,7 +121,7 @@ const insertMorbidness = (morbidnessName: string[], tenantId: number): void => {
       morbidnessCode: v,
     }));
 
-    Morbidness.bulkCreate(data);
+    Morbidness.bulkCreate(data, { ignoreDuplicates: true });
   });
 };
 
@@ -120,13 +143,21 @@ export const importExcel = async (
           return;
         }
 
-        const { data, morbidNessName } = getKeysFromExcelFile(
-          +req.headers["tid"],
-          req.file
-        );
+        const { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness } =
+          getKeysFromExcelFile(+req.headers["tid"], req.file);
+
+        if (isEmptyMedicine || isEmptyMorbidness) {
+          res.json(
+            failedResponse(
+              "Tên thuốc hoặc bệnh không được để trống",
+              "RequiredField"
+            )
+          );
+          return;
+        }
 
         Promise.all([
-          Medicine.bulkCreate(data),
+          Medicine.bulkCreate(data, { ignoreDuplicates: true }),
           insertMorbidness(morbidNessName, +req.headers["tid"]),
         ])
           .then(([medicines, morbidness]) => {

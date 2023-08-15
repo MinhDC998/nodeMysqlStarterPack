@@ -18,7 +18,11 @@ const Morbidness = sequelize.define<IModelMorbidness>(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    morbidnessCode: DataTypes.STRING,
+    morbidnessCode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
   },
   { underscored: true }
 );

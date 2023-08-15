@@ -20,8 +20,14 @@ const Medicine = sequelize.define<IModelMedicine>(
     },
     specificDisease: DataTypes.TEXT,
     symptoms: DataTypes.TEXT,
-    medicineCode: DataTypes.STRING,
-    medicineName: DataTypes.STRING,
+    medicineCode: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
+    medicineName: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
     ingredients: DataTypes.TEXT,
     specificObject: DataTypes.TEXT,
     morbidness: DataTypes.TEXT,
