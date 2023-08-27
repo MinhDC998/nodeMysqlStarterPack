@@ -4,6 +4,7 @@ import * as controller from "@components/tenant/tenant.controller";
 const router = express.Router();
 
 router.get("/", controller.list);
+router.get("/all", controller.listAll);
 router.post("/", controller.create);
 router.post("/attach-tenant", controller.addUserToTenant);
 

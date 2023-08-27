@@ -8,3 +8,10 @@ export const validationLoginRequest = [
     .isLength({ min: 6 })
     .withMessage("Mật khẩu tối thiểu 6 kí tự"),
 ];
+
+export const validationRegisterRequest = [
+  ...validationLoginRequest,
+  body("displayName").exists().withMessage("Tên không được bỏ trống"),
+  body("role").exists().withMessage("Quyền không được bỏ trống"),
+  body("tenantId").exists().withMessage("Nhà thuốc không được bỏ trống"),
+];

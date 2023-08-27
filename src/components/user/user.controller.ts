@@ -13,6 +13,7 @@ import {
   customRequest,
   customResponse,
   requestBody,
+  requestQuery,
 } from "@utils/http";
 import roleConstant from "@root/constants/role.constant";
 
@@ -32,13 +33,13 @@ export const create = async (
     });
 
     if (isExistUser) {
-      res.json(failedResponse("Tài khoản đã tồn tại", "userExisted"));
+      res.json(failedResponse("Tài khoản đã tồn tại", "FAILED"));
       return;
     }
 
     if (data.role === roleConstant.ADMIN) {
       res.json(
-        failedResponse("Không được phép tạo tài khoản quản trị", "roleNotAlow")
+        failedResponse("Không được phép tạo tài khoản quản trị", "FAILED")
       );
       return;
     }
@@ -93,6 +94,36 @@ export const login = async (
     );
   } catch (err) {
     console.log({ err });
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const list = async (
+  req: requestQuery<{ offset: number; limit: number }>,
+  res: customResponse<any>
+) => {
+  try {
+    const { offset, limit } = req.query;
+    const result = await User.findAndCountAll({
+      offset: +offset,
+      limit: +limit,
+    });
+
+    res.json(successResponse(result));
+  } catch (err) {
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const listAll = async (
+  req: requestQuery<unknown>,
+  res: customResponse<any>
+) => {
+  try {
+    const result = await User.findAll();
+
+    res.json(successResponse(result));
+  } catch (err) {
     res.json(failedResponse("Error", "Error"));
   }
 };

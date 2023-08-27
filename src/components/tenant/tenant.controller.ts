@@ -51,6 +51,19 @@ export const list = async (
   }
 };
 
+export const listAll = async (
+  req: requestQuery<unknown>,
+  res: customResponse<any>
+) => {
+  try {
+    const result = await Tenant.findAll();
+
+    res.json(successResponse(result));
+  } catch (err) {
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
 export const detail = async (
   req: requestParams<{ id: string }>,
   res: customResponse<any>

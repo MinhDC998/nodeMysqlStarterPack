@@ -25,12 +25,14 @@ import { IMorbidness } from "@ts/morbidness.types";
 import Medicine from "@models/medicine";
 import Morbidness from "@models/morbidness";
 import { uppercaseFirstLetter } from "@utils/collection";
+import { EXCEL_MEDICINE_STATUS } from "@constants/medicine.constants";
 
 interface IResExcelData {
   data: IMedicine[];
   morbidNessName: string[];
   isEmptyMedicine: boolean;
   isEmptyMorbidness: boolean;
+  dataUpdate?: IMedicine[];
 }
 
 const getKeysFromExcelFile = (
@@ -48,8 +50,8 @@ const getKeysFromExcelFile = (
   );
 
   const data: IMedicine[] = [];
-  const morbidnessData: IMorbidness[] = [];
   const morbidNessName: string[] = [];
+  const dataUpdate: IMedicine[] = [];
 
   let isEmptyMedicine = false;
   let isEmptyMorbidness = false;
@@ -58,35 +60,47 @@ const getKeysFromExcelFile = (
     if (i === 0) continue;
     const v = xlData[i];
 
-    if (!v[3] || !v[2]) {
+    if (!v[4] || !v[3]) {
       isEmptyMedicine = true;
+      console.log(v[3], v[4], i);
 
       return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
     }
 
-    if (!v[5]) {
+    if (!v[6]) {
+      console.log(v[6], i);
       isEmptyMorbidness = true;
 
       return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
     }
 
-    data.push({
-      name: v[2],
-      specificDisease: v[6],
-      symptoms: v[3],
-      medicineCode: v[3],
-      medicineName: v[2],
-      ingredients: v[4],
-      specificObject: v[7],
-      morbidness: v[5],
-      dosage: v[9],
-      note: v[10],
+    const excelMedicineData = {
+      name: v[3],
+      specificDisease: v[7],
+      symptoms: v[4],
+      medicineCode: v[4],
+      medicineName: v[3],
+      ingredients: v[5],
+      specificObject: v[8],
+      morbidness: v[6],
+      dosage: v[10],
+      note: v[11],
       tenantId,
       price: 0,
       unit: 0,
-      medicineGroup: v[1],
-      diseaseStatus: v[8],
-    });
+      medicineGroup: v[2],
+      diseaseStatus: v[9],
+    };
+
+    switch (+v[0]) {
+      case EXCEL_MEDICINE_STATUS.INSERT:
+        data.push(excelMedicineData);
+        break;
+
+      default:
+        dataUpdate.push(excelMedicineData);
+        break;
+    }
 
     if (v[5]) {
       v[5].split(",").forEach((name: string) => {
@@ -99,7 +113,13 @@ const getKeysFromExcelFile = (
 
   if (fs.existsSync(file.path)) fs.rmSync(file.path, { recursive: true });
 
-  return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
+  return {
+    data,
+    morbidNessName,
+    isEmptyMedicine,
+    isEmptyMorbidness,
+    dataUpdate,
+  };
 };
 
 const insertMorbidness = (morbidnessName: string[], tenantId: number): void => {
@@ -143,8 +163,13 @@ export const importExcel = async (
           return;
         }
 
-        const { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness } =
-          getKeysFromExcelFile(+req.headers["tid"], req.file);
+        const {
+          data,
+          morbidNessName,
+          isEmptyMedicine,
+          isEmptyMorbidness,
+          dataUpdate,
+        } = getKeysFromExcelFile(+req.headers["tid"], req.file);
 
         if (isEmptyMedicine || isEmptyMorbidness) {
           res.json(
@@ -156,9 +181,16 @@ export const importExcel = async (
           return;
         }
 
+        const update =
+          dataUpdate?.map((v) => {
+            Medicine.update(v, { where: { medicineCode: v.medicineCode } });
+          }) || [];
+
         Promise.all([
-          Medicine.bulkCreate(data, { ignoreDuplicates: true }),
-          insertMorbidness(morbidNessName, +req.headers["tid"]),
+          data && Medicine.bulkCreate(data, { ignoreDuplicates: true }),
+          morbidNessName &&
+            insertMorbidness(morbidNessName, +req.headers["tid"]),
+          dataUpdate && update,
         ])
           .then(([medicines, morbidness]) => {
             transaction.commit();
