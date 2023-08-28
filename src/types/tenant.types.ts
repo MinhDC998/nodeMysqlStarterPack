@@ -5,3 +5,8 @@ export interface ITenant extends ModelDeclare<ITenant> {
   name: string;
   userId?: number;
 }
+
+export interface IInputTenant {
+  name: string;
+  usersName: string[];
+}

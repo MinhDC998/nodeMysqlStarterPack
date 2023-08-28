@@ -26,5 +26,8 @@ router.post(
 
 router.get("/", controller.list);
 router.get("/all", controller.listAll);
+router.get("/users-tenant", controller.getUsersInTenant);
+
+router.post("/:id", controller.update);
 
 export default router;

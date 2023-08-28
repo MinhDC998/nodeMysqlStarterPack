@@ -19,8 +19,12 @@ export function authenticateToken(
 
     // @ts-ignore
     req.user = user;
-    req.body.userId = user.id;
-    req.body.tenantId = req.headers["tid"] ? +req.headers["tid"] : null;
+    req.body.userId = req.body.userId || user.id;
+    req.body.tenantId = req.body.tenantId
+      ? req.body.tenantId
+      : req.headers["tid"]
+      ? +req.headers["tid"]
+      : null;
 
     return next();
   });

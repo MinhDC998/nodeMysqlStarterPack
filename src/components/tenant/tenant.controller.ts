@@ -9,20 +9,22 @@ import {
 } from "@utils/http";
 import { sequelize } from "@models/.";
 
-import { ITenant } from "@ts/tenant.types";
+import { ITenant, IInputTenant } from "@ts/tenant.types";
 
 import Tenant from "@models/tenant";
 import User from "@models/user";
+import { Op } from "sequelize";
 
 export const create = async (
-  req: requestBody<{ name: string }>,
+  req: requestBody<IInputTenant>,
   res: customResponse<ITenant>
 ) => {
   const transaction = await sequelize.transaction();
 
   try {
     const data = req.body;
-    const result = await Tenant.create(data, { transaction });
+    const result = await Tenant.create({ name: data.name }, { transaction });
+    data.usersName && addUsersToTenant(data.usersName, result.id);
 
     transaction.commit();
 
@@ -30,6 +32,29 @@ export const create = async (
   } catch (err) {
     transaction.rollback();
 
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const update = async (
+  req: customRequest<{ id: number }, IInputTenant>,
+  res: customResponse<any>
+) => {
+  try {
+    sequelize.transaction(async (transaction: any) => {
+      const { id } = req.params;
+      const inputUpdate = req.body;
+
+      await Tenant.update(
+        { name: inputUpdate.name },
+        { where: { id }, transaction }
+      );
+
+      inputUpdate.usersName && addUsersToTenant(inputUpdate.usersName, id);
+
+      res.json(successResponse(await Tenant.findByPk(id)));
+    });
+  } catch (err) {
     res.json(failedResponse("Error", "Error"));
   }
 };
@@ -82,24 +107,6 @@ export const detail = async (
   }
 };
 
-export const update = async (
-  req: customRequest<{ id: string }, ITenant>,
-  res: customResponse<any>
-) => {
-  try {
-    sequelize.transaction(async (transaction: any) => {
-      const { id } = req.params;
-      const inputUpdate = req.body;
-
-      await Tenant.update(inputUpdate, { where: { id }, transaction });
-
-      res.json(successResponse(await Tenant.findByPk(id)));
-    });
-  } catch (err) {
-    res.json(failedResponse("Error", "Error"));
-  }
-};
-
 export const remove = async (
   req: requestParams<{ id: string }>,
   res: customResponse<any>
@@ -117,29 +124,11 @@ export const remove = async (
   }
 };
 
-export const addUserToTenant = async (
-  req: requestBody<{ user: number; tenant: number }>,
-  res: customResponse<any>
-) => {
-  try {
-    sequelize.transaction(async (transaction: any) => {
-      const { user, tenant } = req.body;
-
-      const tenantRes = await Tenant.findOne({ where: { id: tenant } });
-
-      if (!tenantRes) {
-        res.json(failedResponse("Nhà thuốc không tồn tại", "Error"));
-        return;
-      }
-
-      await User.update(
-        { tenantId: tenant },
-        { where: { id: user }, transaction }
-      );
-
-      res.json(successResponse(true));
-    });
-  } catch (err) {
-    res.json(failedResponse("Error", "Error"));
-  }
+export const addUsersToTenant = async (usersName: string[], tenant: any) => {
+  User.update({ tenantId: null }, { where: { tenantId: tenant } }).then(() => {
+    User.update(
+      { tenantId: tenant },
+      { where: { username: { [Op.in]: usersName } } }
+    );
+  });
 };

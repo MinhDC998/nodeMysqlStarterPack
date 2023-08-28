@@ -1,11 +1,12 @@
-import { NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { Op } from "sequelize";
 import bcrypt from "bcrypt";
 
 import { sequelize } from "@models/.";
 import User from "@models/user";
 
-import { TCreate, TLogin, TResLogin } from "@ts/user.types";
+import { TCreate, TLogin, TResLogin, TUpdate } from "@ts/user.types";
+import roleConstant from "@constants/role.constant";
 
 import {
   failedResponse,
@@ -15,7 +16,6 @@ import {
   requestBody,
   requestQuery,
 } from "@utils/http";
-import roleConstant from "@root/constants/role.constant";
 
 const { SALT_ROUND, SECRET_KEY, EXPIRED_IN } = process.env;
 
@@ -99,12 +99,21 @@ export const login = async (
 };
 
 export const list = async (
-  req: requestQuery<{ offset: number; limit: number }>,
+  req: requestQuery<{ offset: number; limit: number; key: string }>,
   res: customResponse<any>
 ) => {
   try {
-    const { offset, limit } = req.query;
+    const { offset, limit, key } = req.query;
     const result = await User.findAndCountAll({
+      where: {
+        role: { [Op.ne]: roleConstant.ADMIN },
+        ...(key && {
+          [Op.or]: [
+            { username: { [Op.like]: `%${key}%` } },
+            { displayName: { [Op.like]: `%${key}%` } },
+          ],
+        }),
+      },
       offset: +offset,
       limit: +limit,
     });
@@ -120,10 +129,54 @@ export const listAll = async (
   res: customResponse<any>
 ) => {
   try {
-    const result = await User.findAll();
+    const result = await User.findAll({
+      where: { role: { [Op.ne]: roleConstant.ADMIN } },
+    });
 
     res.json(successResponse(result));
   } catch (err) {
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const update = async (
+  req: customRequest<{ id: string }, TUpdate>,
+  res: customResponse<boolean>
+) => {
+  try {
+    const { id } = req.params;
+    const body = req.body;
+
+    if (body.password) {
+      body.password = await bcrypt.hash(
+        body.password,
+        SALT_ROUND ? +SALT_ROUND : 8
+      );
+    }
+
+    await User.update(body, { where: { id } });
+
+    res.json(successResponse(true));
+  } catch (err) {
+    console.log({ err });
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const getUsersInTenant = async (
+  req: requestQuery<{ tenantId: number }>,
+  res: customResponse<any>
+) => {
+  try {
+    console.log(req.query.tenantId);
+    const result = await User.findAll({
+      where: { tenantId: { [Op.eq]: req.query.tenantId } },
+      attributes: ["username"],
+    });
+
+    res.json(successResponse(result));
+  } catch (err) {
+    console.log({ err });
     res.json(failedResponse("Error", "Error"));
   }
 };

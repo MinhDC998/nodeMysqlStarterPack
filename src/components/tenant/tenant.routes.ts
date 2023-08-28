@@ -6,7 +6,6 @@ const router = express.Router();
 router.get("/", controller.list);
 router.get("/all", controller.listAll);
 router.post("/", controller.create);
-router.post("/attach-tenant", controller.addUserToTenant);
 
 router.get("/:id", controller.detail);
 router.put("/:id", controller.update);

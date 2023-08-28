@@ -24,6 +24,10 @@ const Symptom = sequelize.define<ISymptom>(
   { underscored: true }
 );
 
-Symptom.belongsTo(Tenant, { foreignKey: "tenant_id", as: "tenant" });
+Symptom.belongsTo(Tenant, {
+  foreignKey: "tenant_id",
+  as: "tenant",
+  onDelete: "CASCADE",
+});
 
 export default Symptom;
