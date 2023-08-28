@@ -4,9 +4,12 @@ import bcrypt from "bcrypt";
 
 import { sequelize } from "@models/.";
 import User from "@models/user";
+import Tenant from "@models/tenant";
 
 import { TCreate, TLogin, TResLogin, TUpdate } from "@ts/user.types";
+
 import roleConstant from "@constants/role.constant";
+import { TENANT_STATUS } from "@constants/tenant.constant";
 
 import {
   failedResponse,
@@ -15,6 +18,7 @@ import {
   customResponse,
   requestBody,
   requestQuery,
+  requestParams,
 } from "@utils/http";
 
 const { SALT_ROUND, SECRET_KEY, EXPIRED_IN } = process.env;
@@ -77,6 +81,29 @@ export const login = async (
       return;
     }
 
+    if (+user.role === roleConstant.TENANT_USER) {
+      if (!user.tenantId) {
+        res.json(
+          failedResponse("Tài khoản không thuộc nhà thuốc nào", "FAILED")
+        );
+        return;
+      }
+
+      const tenant = await Tenant.findOne({
+        where: { id: user.tenantId, status: TENANT_STATUS.ACTIVATED },
+      });
+
+      if (!tenant) {
+        res.json(
+          failedResponse(
+            "Nhà thuốc thuộc tài khoản này đã bị vô hiệu hóa",
+            "FAILED"
+          )
+        );
+        return;
+      }
+    }
+
     const token = jwt.sign({ id: user.id }, SECRET_KEY || "", {
       expiresIn: "24h",
     });
@@ -113,6 +140,7 @@ export const list = async (
             { displayName: { [Op.like]: `%${key}%` } },
           ],
         }),
+        tenantId: req.headers["tid"],
       },
       offset: +offset,
       limit: +limit,
@@ -140,7 +168,7 @@ export const listAll = async (
 };
 
 export const update = async (
-  req: customRequest<{ id: string }, TUpdate>,
+  req: customRequest<{ id: number }, TUpdate>,
   res: customResponse<boolean>
 ) => {
   try {
@@ -154,7 +182,22 @@ export const update = async (
       );
     }
 
-    await User.update(body, { where: { id } });
+    console.log({
+      displayName: body.displayName,
+      ...(body.password && { password: body.password }),
+    });
+
+    User.findOne({ where: { id } }).then((record) => {
+      if (record) {
+        record.update({
+          ...record,
+          ...{
+            displayName: body.displayName,
+            ...(body.password && { password: body.password }),
+          },
+        });
+      }
+    });
 
     res.json(successResponse(true));
   } catch (err) {
@@ -177,6 +220,23 @@ export const getUsersInTenant = async (
     res.json(successResponse(result));
   } catch (err) {
     console.log({ err });
+    res.json(failedResponse("Error", "Error"));
+  }
+};
+
+export const remove = async (
+  req: requestParams<{ id: string }>,
+  res: customResponse<any>
+) => {
+  try {
+    sequelize.transaction(async (transaction: any) => {
+      const { id } = req.params;
+
+      await User.destroy({ where: { id }, transaction });
+
+      res.json(successResponse(true));
+    });
+  } catch (err) {
     res.json(failedResponse("Error", "Error"));
   }
 };

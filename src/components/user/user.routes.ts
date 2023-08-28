@@ -29,5 +29,6 @@ router.get("/all", controller.listAll);
 router.get("/users-tenant", controller.getUsersInTenant);
 
 router.post("/:id", controller.update);
+router.delete("/:id", controller.remove);
 
 export default router;

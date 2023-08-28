@@ -1,8 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from ".";
 
-import User from "@models/user";
-
 import { ITenant } from "@ts/tenant.types";
 
 const Tenant = sequelize.define<ITenant>(
@@ -18,6 +16,7 @@ const Tenant = sequelize.define<ITenant>(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    status: DataTypes.SMALLINT,
   },
   { underscored: true }
 );

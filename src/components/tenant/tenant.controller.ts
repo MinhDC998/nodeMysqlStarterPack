@@ -9,6 +9,7 @@ import {
 } from "@utils/http";
 import { sequelize } from "@models/.";
 
+import { TENANT_STATUS } from "@constants/tenant.constant";
 import { ITenant, IInputTenant } from "@ts/tenant.types";
 
 import Tenant from "@models/tenant";
@@ -43,14 +44,11 @@ export const update = async (
   try {
     sequelize.transaction(async (transaction: any) => {
       const { id } = req.params;
-      const inputUpdate = req.body;
+      const { name, status, usersName } = req.body;
 
-      await Tenant.update(
-        { name: inputUpdate.name },
-        { where: { id }, transaction }
-      );
+      await Tenant.update({ name, status }, { where: { id }, transaction });
 
-      inputUpdate.usersName && addUsersToTenant(inputUpdate.usersName, id);
+      usersName && addUsersToTenant(usersName, id);
 
       res.json(successResponse(await Tenant.findByPk(id)));
     });
@@ -68,6 +66,7 @@ export const list = async (
     const result = await Tenant.findAndCountAll({
       offset: +offset,
       limit: +limit,
+      where: { status: TENANT_STATUS.ACTIVATED },
     });
 
     res.json(successResponse(result));
@@ -81,7 +80,9 @@ export const listAll = async (
   res: customResponse<any>
 ) => {
   try {
-    const result = await Tenant.findAll();
+    const result = await Tenant.findAll({
+      where: { status: TENANT_STATUS.ACTIVATED },
+    });
 
     res.json(successResponse(result));
   } catch (err) {
