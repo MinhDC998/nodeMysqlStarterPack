@@ -23,9 +23,14 @@ export const create = async (
   const transaction = await sequelize.transaction();
 
   try {
-    const data = req.body;
-    const result = await Tenant.create({ name: data.name }, { transaction });
-    data.usersName && addUsersToTenant(data.usersName, result.id);
+    const { name, usersName } = req.body;
+
+    const result = await Tenant.create(
+      { name, status: TENANT_STATUS.ACTIVATED },
+      { transaction }
+    );
+
+    usersName && addUsersToTenant(usersName, result.id);
 
     transaction.commit();
 

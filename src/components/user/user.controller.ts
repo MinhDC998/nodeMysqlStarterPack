@@ -182,11 +182,6 @@ export const update = async (
       );
     }
 
-    console.log({
-      displayName: body.displayName,
-      ...(body.password && { password: body.password }),
-    });
-
     User.findOne({ where: { id } }).then((record) => {
       if (record) {
         record.update({
