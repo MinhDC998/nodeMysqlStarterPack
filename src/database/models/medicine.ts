@@ -22,11 +22,11 @@ const Medicine = sequelize.define<IModelMedicine>(
     symptoms: DataTypes.TEXT,
     medicineCode: {
       type: DataTypes.STRING,
-      unique: true,
+      unique: false,
     },
     medicineName: {
       type: DataTypes.STRING,
-      unique: true,
+      unique: false,
     },
     ingredients: DataTypes.TEXT,
     specificObject: DataTypes.TEXT,

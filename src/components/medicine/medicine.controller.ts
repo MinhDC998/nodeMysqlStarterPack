@@ -35,10 +35,10 @@ interface IResExcelData {
   dataUpdate?: IMedicine[];
 }
 
-const getKeysFromExcelFile = (
+const getKeysFromExcelFile = async (
   tenantId: number,
   file: Express.Multer.File
-): IResExcelData => {
+): Promise<IResExcelData> => {
   const workbook = xlsx.readFile(path.resolve(process.cwd(), file.path));
   const sheet_name_list = workbook.SheetNames;
 
@@ -52,6 +52,7 @@ const getKeysFromExcelFile = (
   const data: IMedicine[] = [];
   const morbidNessName: string[] = [];
   const dataUpdate: IMedicine[] = [];
+  const insertMedicineCode: string[] = [];
 
   let isEmptyMedicine = false;
   let isEmptyMorbidness = false;
@@ -62,13 +63,11 @@ const getKeysFromExcelFile = (
 
     if (!v[4] || !v[3]) {
       isEmptyMedicine = true;
-      console.log(v[3], v[4], i);
 
       return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
     }
 
     if (!v[6]) {
-      console.log(v[6], i);
       isEmptyMorbidness = true;
 
       return { data, morbidNessName, isEmptyMedicine, isEmptyMorbidness };
@@ -95,6 +94,7 @@ const getKeysFromExcelFile = (
     switch (+v[0]) {
       case EXCEL_MEDICINE_STATUS.INSERT:
         data.push(excelMedicineData);
+        insertMedicineCode.push(v[4]);
         break;
 
       default:
@@ -113,8 +113,16 @@ const getKeysFromExcelFile = (
 
   if (fs.existsSync(file.path)) fs.rmSync(file.path, { recursive: true });
 
+  const dataInsert = (
+    await Medicine.findAll({
+      where: { medicineCode: { [Op.in]: insertMedicineCode }, tenantId },
+      attributes: ["medicineCode"],
+      raw: true,
+    })
+  ).map((v) => v.medicineCode);
+
   return {
-    data,
+    data: data.filter((v) => !dataInsert.includes(v.medicineCode)),
     morbidNessName,
     isEmptyMedicine,
     isEmptyMorbidness,
@@ -145,21 +153,21 @@ const insertMorbidness = (morbidnessName: string[], tenantId: number): void => {
   });
 };
 
-export const importExcel = async (
+export const importExcel = (
   req: customRequest<never, any>,
   res: customResponse<any>
 ) => {
   sequelize
     .transaction()
-    .then((transaction) => {
+    .then(async (transaction) => {
       try {
         if (!req.headers["tid"]) {
-          res.json(failedResponse("Không tìm thấy nhà thuốc", "Error"));
+          res.json(failedResponse("Không tìm thấy nhà thuốc", "FAILED"));
           return;
         }
 
         if (!req.file) {
-          res.json(failedResponse("Không có file", "Error"));
+          res.json(failedResponse("Không có file", "FAILED"));
           return;
         }
 
@@ -169,7 +177,7 @@ export const importExcel = async (
           isEmptyMedicine,
           isEmptyMorbidness,
           dataUpdate,
-        } = getKeysFromExcelFile(+req.headers["tid"], req.file);
+        } = await getKeysFromExcelFile(+req.headers["tid"], req.file);
 
         if (isEmptyMedicine || isEmptyMorbidness) {
           res.json(
@@ -205,18 +213,18 @@ export const importExcel = async (
           .catch((err) => {
             console.log({ err });
 
-            res.json(failedResponse("Error", "Error"));
+            res.json(failedResponse("FAILED", "FAILED"));
           });
       } catch (err) {
         console.log({ err });
         transaction.rollback();
 
-        res.json(failedResponse("Error", "Error"));
+        res.json(failedResponse("FAILED", "FAILED"));
       }
     })
     .catch((err) => {
       console.log({ err });
-      res.json(failedResponse("Error", "Error"));
+      res.json(failedResponse("FAILED", "FAILED"));
     });
 };
 
@@ -228,11 +236,26 @@ export const create = async (
     .transaction()
     .then(async (transaction) => {
       if (!req.headers["tid"]) {
-        res.json(failedResponse("Không tìm thấy nhà thuốc", "Error"));
+        res.json(failedResponse("Không tìm thấy nhà thuốc", "FAILED"));
         return;
       }
 
       const data = req.body;
+
+      const isDup = await Medicine.findOne({
+        where: {
+          [Op.or]: [
+            { medicineCode: data.medicineCode },
+            { medicineName: data.medicineName },
+          ],
+          tenantId: +req.headers["tid"],
+        },
+      });
+
+      if (isDup) {
+        res.json(failedResponse("Thuốc đã tồn tại", "FAILED"));
+        return;
+      }
 
       data.name = "";
       data.image = req.file?.filename || null;
@@ -244,8 +267,9 @@ export const create = async (
 
       res.json(successResponse(result));
     })
-    .catch(() => {
-      res.json(failedResponse("Error", "Error"));
+    .catch((err) => {
+      console.log(err);
+      res.json(failedResponse("FAILED", "FAILED"));
     });
 };
 
@@ -340,7 +364,7 @@ export const list = async (
     res.json(successResponse(result));
   } catch (err) {
     console.log({ err });
-    res.json(failedResponse("Error", "Error"));
+    res.json(failedResponse("FAILED", "FAILED"));
   }
 };
 
@@ -407,7 +431,7 @@ export const listStatus = async (
     res.json(successResponse(responseList));
   } catch (err) {
     console.log({ err });
-    res.json(failedResponse("Error", "Error"));
+    res.json(failedResponse("FAILED", "FAILED"));
   }
 };
 
@@ -425,7 +449,7 @@ export const detail = async (
 
     res.json(successResponse(result));
   } catch (err) {
-    res.json(failedResponse("Error", "Error"));
+    res.json(failedResponse("FAILED", "FAILED"));
   }
 };
 
@@ -445,7 +469,7 @@ export const update = async (
       res.json(successResponse(await Medicine.findByPk(id)));
     });
   } catch (err) {
-    res.json(failedResponse("Error", "Error"));
+    res.json(failedResponse("FAILED", "FAILED"));
   }
 };
 
@@ -462,6 +486,6 @@ export const remove = async (
       res.json(successResponse(true));
     });
   } catch (err) {
-    res.json(failedResponse("Error", "Error"));
+    res.json(failedResponse("FAILED", "FAILED"));
   }
 };
