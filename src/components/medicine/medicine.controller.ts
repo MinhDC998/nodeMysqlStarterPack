@@ -102,8 +102,8 @@ const getKeysFromExcelFile = async (
         break;
     }
 
-    if (v[5]) {
-      v[5].split(",").forEach((name: string) => {
+    if (v[6]) {
+      v[6].split(",").forEach((name: string) => {
         const morName = uppercaseFirstLetter(name).trim().toLowerCase();
 
         if (!morbidNessName.includes(morName)) morbidNessName.push(morName);
@@ -258,8 +258,12 @@ export const create = async (
       }
 
       data.name = "";
-      data.image = req.file?.filename || null;
+      // @ts-ignore
+      data.image = req.file?.location || null;
       data.tenantId = +req.headers["tid"];
+
+      // console.log({ data });
+      console.log(req.file);
 
       const result = await Medicine.create(data, { transaction });
 
